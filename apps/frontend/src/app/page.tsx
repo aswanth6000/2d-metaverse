@@ -166,59 +166,75 @@ export default function App() {
   }, [self, users]);
 
 
-  const handleMove = (newX: number, newY: number) => {
-    if (!self) return
-    if (newX < 0 || newX >= GRID_WIDTH || newY < 0 || newY >= GRID_HEIGHT) {
-      console.log("Move rejected: out of bounds", newX, newY);
-      return;
-    }
-    socketRef.current.send(JSON.stringify({
-      type: "move",
-      payload: { x: newX, y: newY, userId: self.id, },
-    }))
-  }
 
-  // Handle arrow keys to move
-  const handleKey = (e: KeyboardEvent) => {
-    if (!self || !socketRef.current) return;
-    const { x, y } = self
+  // This function now handles the logic and the optimistic update
+  const handleMove = (dx: number, dy: number) => {
+    // Use the functional form of setState to get the most recent state
+    setSelf((prevSelf: { x: number; y: number; }) => {
+      if (prevSelf.x === undefined) return prevSelf; // Don't move if not spawned yet
 
-    switch (e.key) {
-      case "ArrowUp":
-        handleMove(x, y - 1)
-        break
-      case "ArrowDown":
-        handleMove(x, y + 1)
-        break
-      case "ArrowLeft":
-        handleMove(x - 1, y)
-        break
-      case "ArrowRight":
-        handleMove(x + 1, y)
-        break
-    }
+      const newX = prevSelf.x + dx;
+      const newY = prevSelf.y + dy;
 
+      // 1. Check boundaries on the client side
+      if (newX < 0 || newX >= GRID_WIDTH || newY < 0 || newY >= GRID_HEIGHT) {
+        return prevSelf; // Do nothing if out of bounds
+      }
+
+      // 2. Send the move to the server
+      if (socketRef.current) {
+        socketRef.current.send(JSON.stringify({
+          type: "move",
+          payload: { x: newX, y: newY },
+        }));
+      }
+      
+      // 3. Optimistically update the state for immediate feedback
+      return { ...prevSelf, x: newX, y: newY };
+    });
   };
+
+
+  // This useEffect now sets up the listener just once.
   useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      // The logic is now inside handleMove, which prevents stale state.
+      switch (e.key) {
+        case "ArrowUp":
+          handleMove(0, -1);
+          break;
+        case "ArrowDown":
+          handleMove(0, 1);
+          break;
+        case "ArrowLeft":
+          handleMove(-1, 0);
+          break;
+        case "ArrowRight":
+          handleMove(1, 0);
+          break;
+      }
+    };
 
     window.addEventListener("keydown", handleKey);
+
+    // Cleanup function to remove the listener when the component unmounts
     return () => window.removeEventListener("keydown", handleKey);
-  }, [self, socketRef]);
+  }, []); 
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4"> 2D Metaverse</h1>
-
+       <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">🕹️ 2D Metaverse</h1>
+      
       {/* Canvas container with responsive styling */}
       <div className="border-2 border-gray-300 rounded-lg p-2 bg-gray-50 inline-block">
-        <canvas
-          ref={canvasRef}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
+        <canvas 
+          ref={canvasRef} 
+          width={CANVAS_WIDTH} 
+          height={CANVAS_HEIGHT} 
           className="bg-white border border-gray-200 rounded shadow-sm max-w-full h-auto"
         />
       </div>
-
+      
       {/* Controls info */}
       <div className="mt-4 text-sm text-gray-600">
         <p>Use arrow keys to move around</p>
