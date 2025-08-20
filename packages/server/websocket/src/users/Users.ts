@@ -31,7 +31,9 @@ export class User {
     initHandlers() {
         this.ws.on('message', async (data) => {
             const parsedData = JSON.parse(data.toString())
+            console.log(parsedData);
             
+
             const type = parsedData.type
             switch (type) {
                 case 'join':
@@ -47,9 +49,9 @@ export class User {
 
                     const space = {
                         spaceId: "lobby-1",
-                        width: 2000,
+                        width: 25,
                         name: "defalut",
-                        height: 1000
+                        height: 15
                     }
 
                     this.spaceId = spaceId
@@ -59,13 +61,13 @@ export class User {
                     this.send({
                         type: "space-joined",
                         payload: {
-                            spawn: {
-                                x: this.x,
-                                y: this.y
-                            },
-                            users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({ id: u.id })) ?? []
+                            spawn: { x: this.x, y: this.y },
+                            users: RoomManager.getInstance().rooms.get(spaceId)
+                                ?.filter(x => x.id !== this.id)
+                                ?.map((u) => ({ userId: u.userId, x: u.x, y: u.y })) ?? []
                         }
                     });
+
                     RoomManager.getInstance().broadcast({
                         type: "user-joined",
                         payload: {
@@ -88,6 +90,7 @@ export class User {
                         RoomManager.getInstance().broadcast({
                             type: "movement",
                             payload: {
+                                userId: this.userId,
                                 x: this.x,
                                 y: this.y
                             }
