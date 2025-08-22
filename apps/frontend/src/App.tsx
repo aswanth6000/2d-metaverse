@@ -5,8 +5,8 @@ import { useEffect, useRef, useState } from "react";
 
 
 const GRID_CELL_SIZE = 30;
-const GRID_WIDTH = 25;
-const GRID_HEIGHT = 15;
+const GRID_WIDTH = 50;
+const GRID_HEIGHT = 22;
 const CANVAS_WIDTH = GRID_WIDTH * GRID_CELL_SIZE;
 const CANVAS_HEIGHT = GRID_HEIGHT * GRID_CELL_SIZE;
 
@@ -222,7 +222,7 @@ export default function App() {
   }, []); 
 
   return (
-       <div className="p-4">
+       <div className="p-4 w-full flex justify-center items-center flex-col">
       <h1 className="text-2xl font-bold mb-4">🕹️ 2D Metaverse</h1>
       
       {/* Canvas container with responsive styling */}
