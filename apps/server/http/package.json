@@ -1,12 +1,24 @@
 {
-  "name": "http",
+  "name": "@repo/http",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "nodemon src/index.ts"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@types/express": "^5.0.3",
+    "@repo/db": "workspace:*",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }

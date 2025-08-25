@@ -21,10 +21,12 @@
   "packageManager": "bun@1.2.19",
   "workspaces": [
     "apps/*",
+    "apps/*/*",
     "packages/*",
     "packages/*/*"
   ],
   "dependencies": {
+    "@prisma/client": "6.14.0",
     "ws": "^8.18.3"
   }
 }
