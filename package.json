@@ -4,10 +4,12 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "test": "turbo run test",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-     "db:migrate": "dotenv -e .env -- bunx prisma migrate dev --schema packages/db/prisma/schema.prisma"
+    "db:migrate": "dotenv -e .env -- bunx prisma migrate dev --schema packages/db/prisma/schema.prisma",
+    "test:db:migrate": "dotenv -e .env.test -- bunx prisma migrate dev --schema packages/db/prisma/schema.prisma"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",

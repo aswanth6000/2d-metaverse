@@ -6,6 +6,9 @@ import { ApiResponse } from '../utils/ApiResponse';
 import type { AuthRequest } from '../middlewares/auth.middleware';
 import { User } from '@repo/db';
 
+console.log("expirationn day", process.env.JWT_REFRESH_EXPIRATION_DAYS!);
+
+
 const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
