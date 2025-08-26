@@ -6,18 +6,22 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// The core User model that was missing
+// The core User model
 model User {
-  id                 String   @id @default(cuid())
-  email              String   @unique
-  passwordHash       String
-  emailVerified      Boolean  @default(false)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String? // Optional for social logins
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  name          String
+
+  // OAuth / Social Login support
+  provider AuthProvider? // Tracks login method (e.g., LOCAL, GOOGLE)
 
   sessions           Session[]
   emailVerifications EmailVerification[]
@@ -25,16 +29,22 @@ model User {
   roles              UserRole[]
 }
 
-// This was your first "User" model, now correctly named "Session"
+// Enum for different login providers
+enum AuthProvider {
+  LOCAL // for email/password
+  GOOGLE
+}
+
+// Manages user login sessions and refresh tokens
 model Session {
-  id             String    @id @default(cuid())
-  userId         String    // The missing foreign key field
-  replacedById   String?   // For token rotation chain
-  revokedAt      DateTime?
-  createdAt      DateTime  @default(now())
-  expiresAt      DateTime
-  ip             String?
-  userAgent      String?
+  id           String    @id @default(cuid())
+  userId       String
+  replacedById String? // For token rotation chain
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  ip           String?
+  userAgent    String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -42,6 +52,7 @@ model Session {
   @@index([expiresAt])
 }
 
+// For handling email confirmation flows
 model EmailVerification {
   id        String   @id @default(cuid())
   userId    String
@@ -54,6 +65,7 @@ model EmailVerification {
   @@index([userId])
 }
 
+// For "forgot password" functionality
 model PasswordReset {
   id        String    @id @default(cuid())
   userId    String
@@ -67,7 +79,7 @@ model PasswordReset {
   @@index([userId])
 }
 
-// Your RBAC models below were well-structured and are kept as is.
+// --- Role-Based Access Control (RBAC) Models ---
 
 model Role {
   id          String           @id @default(cuid())
@@ -78,12 +90,13 @@ model Role {
 }
 
 model Permission {
-  id    String   @id @default(cuid())
-  key   String   @unique // e.g., "invoice.read"
-  createdAt DateTime @default(now())
-  roles RolePermission[]
+  id        String           @id @default(cuid())
+  key       String           @unique // e.g., "invoice.read", "user.create"
+  createdAt DateTime         @default(now())
+  roles     RolePermission[]
 }
 
+// Join table for Roles and Permissions
 model RolePermission {
   roleId       String
   permissionId String
@@ -94,6 +107,7 @@ model RolePermission {
   @@id([roleId, permissionId])
 }
 
+// Join table for Users and Roles
 model UserRole {
   userId String
   roleId String
