@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/index.ts",
-    "test": "jest --detectOpenHandles"
+    "test": "dotenv -e .env.test jest --detectOpenHandles"
   },
   "devDependencies": {
     "@types/bun": "latest",

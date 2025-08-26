@@ -56,7 +56,6 @@ export const loginUser = async (email: string, pass: string) => {
     if (!user.emailVerified) {
         throw new ApiError(httpStatus.FORBIDDEN, 'Email not verified');
     }
-    createSession(user.id)//add ip, user agent later
     const { passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
 };

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import httpStatus from 'http-status';
 import * as authService from '../service/auth.service';
-import { generateAuthTokens } from '../service/token.service';
+import { createSession, generateAuthTokens } from '../service/token.service';
 import { ApiResponse } from '../utils/ApiResponse';
 import type { AuthRequest } from '../middlewares/auth.middleware';
 import { User } from '@repo/db';
@@ -23,6 +23,7 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const user = await authService.loginUser(email, password);
     const { accessToken, refreshToken } = await generateAuthTokens(user.id, req.ip, req.headers['user-agent']);
+    createSession(user.id, req.ip, req.headers['user-agent'])
     res.cookie('refreshToken', refreshToken, cookieOptions);
     res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, { user, accessToken }));
 };
