@@ -3,7 +3,8 @@
   "module": "index.ts",
   "private": true,
   "scripts": {
-    "dev": "nodemon --watch src --exec ts-node src/index.ts"
+    "dev": "nodemon --watch src --exec ts-node src/index.ts",
+    "test": "jest --detectOpenHandles"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -26,6 +27,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/mocha": "^10.0.10",
     "@types/passport-google-oauth20": "^2.0.16",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",

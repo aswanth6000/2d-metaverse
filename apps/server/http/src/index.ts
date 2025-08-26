@@ -1,62 +1,40 @@
-import express from 'express'
-import type{ Express, Request, Response, NextFunction } from 'express';
-import helmet from 'helmet';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
-import httpStatus from 'http-status';
-import passport from 'passport'; // Import passport
-import v1Routes from './routes/v1';
-import { googleStrategy } from './config/passport'; // Import passport config
-import { ApiError } from './utils/ApiError';
-import { errorHandler } from './middlewares/errorMiddleware';
+import app from './app';
 
-// Load environment variables
+// Load environment variables from .env file
 dotenv.config();
 
-const app: Express = express();
+// Determine the port from environment variables, with a fallback
 const PORT = process.env.PORT || 3001;
 
-// --- Passport Configuration ---
-passport.use(googleStrategy);
-
-// Set security HTTP headers
-app.use(helmet());
-
-// Enable CORS
-app.use(cors({
-  origin: 'http://localhost:3000', // Adjust for your frontend URL
-  credentials: true,
-}));
-
-// Parse json request body
-app.use(express.json());
-
-// Parse urlencoded request body
-app.use(express.urlencoded({ extended: true }));
-
-// Parse cookies
-app.use(cookieParser());
-
-// Initialize passport
-app.use(passport.initialize());
-
-// --- API Routes ---
-app.use('/api/v1', v1Routes);
-
-// Health check endpoint
-app.get('/', (req: Request, res: Response) => {
-  res.status(httpStatus.OK).send('API is running!');
+// Start the server and listen on the specified port
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server is running and listening on port ${PORT}`);
 });
 
-// Send back a 404 error for any unknown api request
-app.use((req: Request, res: Response, next: NextFunction) => {
-  next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
-});
+// Optional: Handle process termination gracefully
+const exitHandler = () => {
+  if (server) {
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(1);
+    });
+  } else {
+    process.exit(1);
+  }
+};
 
-// Centralized error handler
-app.use(errorHandler);
+const unexpectedErrorHandler = (error: Error) => {
+  console.error(error);
+  exitHandler();
+};
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server is listening on port ${PORT}`);
+process.on('uncaughtException', unexpectedErrorHandler);
+process.on('unhandledRejection', unexpectedErrorHandler);
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received');
+  if (server) {
+    server.close();
+  }
 });
