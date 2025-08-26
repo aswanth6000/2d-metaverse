@@ -65,6 +65,11 @@ describe("Auth: Login", () => {
         password: "Password123!",
         name: "Login User",
     };
+    const testUserNotVerified = {
+        email: "loginusernotverified@example.com",
+        password: "Password123!",
+        name: "Login Not verified User",
+    };
 
     beforeEach(async () => {
         await prisma.user.deleteMany()
@@ -77,14 +82,46 @@ describe("Auth: Login", () => {
                 emailVerified: true
             }
         })
+        await prisma.user.create({
+            data: {
+                email: testUserNotVerified.email,
+                name: testUserNotVerified.name,
+                passwordHash: hashedPassword,
+                emailVerified: false
+            }
+        })
     })
     afterAll(async () => {
         await prisma.$disconnect()
     })
     it("Should login the user with valid credintials", async () => {
-        const response = await agent.post("/api/v1/auth/login").send({ email: testUser.email, password: testUser.password }).set("user-Agent", "SuperTest")
+        const response = await agent.post("/api/v1/auth/login").send({ email: testUser.email, password: testUser.password }).set("User-Agent", "SuperTest")
             .set("X-Forwarded-For", "127.0.0.1");
+        expect(response.body.data).toHaveProperty("user");
         expect(response.status).toBe(httpStatus.OK)
         expect(response.body.data.user.email).toBe(testUser.email)
+        expect(response.body.data).toHaveProperty("accessToken");
+
+    })
+    it("should throw UNAUTHORIZED when user tries to login with incorrect passoword", async () => {
+        const response = await agent.post("/api/v1/auth/login").send({ email: testUser.email, password: "wrongpassword" }).set("User-Agent", "SuperTest")
+            .set("X-Forwarded-For", "127.0.0.1");
+
+        expect(response.status).toBe(httpStatus.UNAUTHORIZED)
+        expect(response.body.message).toBe("Incorrect email or password")
+    })
+    it("Should fail when user does not exists", async () => {
+        const response = await agent.post("/api/v1/auth/login").send({ email: "random@email.com", password: "wrongpassword" }).set("User-Agent", "SuperTest")
+            .set("X-Forwarded-For", "127.0.0.1");
+
+        expect(response.status).toBe(httpStatus.UNAUTHORIZED)
+        expect(response.body.message).toBe("Incorrect email or password")
+    })
+    it("Should fail when email is not verified", async () => {
+        const response = await agent.post("/api/v1/auth/login").send({ email: testUserNotVerified.email, password: testUserNotVerified.password }).set("User-Agent", "SuperTest")
+            .set("X-Forwarded-For", "127.0.0.1");
+
+        expect(response.status).toBe(httpStatus.FORBIDDEN)
+        expect(response.body.message).toBe('Email not verified')
     })
 })
